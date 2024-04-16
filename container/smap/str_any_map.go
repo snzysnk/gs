@@ -17,11 +17,22 @@ type IStrAnyMap interface {
 	GetOrSetWithLock(k string, v interface{}) interface{}
 	LockFunc(f func(map[string]interface{}))
 	RLockFunc(f func(map[string]interface{}))
+	Remove(k string) interface{}
 }
 
 type strAnyMap struct {
 	mu   srwmutex.IRWMutex
 	data map[string]interface{}
+}
+
+func (s strAnyMap) Remove(k string) (value interface{}) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	var ok bool
+	if value, ok = s.data[k]; ok {
+		delete(s.data, k)
+	}
+	return value
 }
 
 func New(safe bool) IStrAnyMap {
