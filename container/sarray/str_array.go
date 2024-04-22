@@ -20,6 +20,8 @@ type IStrArray interface {
 	FindIndexWithOutLock(value string) (index int)
 	Clear() IStrArray
 	Unique() IStrArray
+	LockFunc(f func(arr []string) IStrArray) IStrArray
+	RLockFunc(f func(arr []string) IStrArray) IStrArray
 }
 
 type strArray struct {
@@ -27,7 +29,19 @@ type strArray struct {
 	data []string
 }
 
-func (s strArray) Unique() IStrArray {
+func (s *strArray) RLockFunc(f func(arr []string) IStrArray) IStrArray {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	return f(s.data)
+}
+
+func (s *strArray) LockFunc(f func(arr []string) IStrArray) IStrArray {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	return f(s.data)
+}
+
+func (s *strArray) Unique() IStrArray {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	if len(s.data) == 0 {
@@ -48,7 +62,7 @@ func (s strArray) Unique() IStrArray {
 	return s
 }
 
-func (s strArray) Clear() IStrArray {
+func (s *strArray) Clear() IStrArray {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	if len(s.data) > 0 {
@@ -58,7 +72,7 @@ func (s strArray) Clear() IStrArray {
 	return s
 }
 
-func (s strArray) FindIndexWithOutLock(value string) (index int) {
+func (s *strArray) FindIndexWithOutLock(value string) (index int) {
 	for i, v := range s.data {
 		if v == value {
 			return i
@@ -67,13 +81,13 @@ func (s strArray) FindIndexWithOutLock(value string) (index int) {
 	return -1
 }
 
-func (s strArray) Remove(i int) (value string, found bool) {
+func (s *strArray) Remove(i int) (value string, found bool) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	return s.RemoveWithOutLock(i)
 }
 
-func (s strArray) RemoveWithOutLock(i int) (value string, found bool) {
+func (s *strArray) RemoveWithOutLock(i int) (value string, found bool) {
 	if i < 0 || i >= len(s.data) {
 		return "", false
 	}
@@ -82,7 +96,7 @@ func (s strArray) RemoveWithOutLock(i int) (value string, found bool) {
 	return value, true
 }
 
-func (s strArray) Insert(i int, v string) error {
+func (s *strArray) Insert(i int, v string) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	if i < 0 || i > len(s.data) {
@@ -92,7 +106,7 @@ func (s strArray) Insert(i int, v string) error {
 	return nil
 }
 
-func (s strArray) ToStrSlice() []string {
+func (s *strArray) ToStrSlice() []string {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 	data := make([]string, len(s.data))
@@ -100,7 +114,7 @@ func (s strArray) ToStrSlice() []string {
 	return data
 }
 
-func (s strArray) SortFunc(f func(i, j string) bool) {
+func (s *strArray) SortFunc(f func(i, j string) bool) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	sort.Slice(s.data, func(i, j int) bool {
@@ -108,13 +122,13 @@ func (s strArray) SortFunc(f func(i, j string) bool) {
 	})
 }
 
-func (s strArray) Len() int {
+func (s *strArray) Len() int {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	return len(s.data)
 }
 
-func (s strArray) Get(i int) (value string, found bool) {
+func (s *strArray) Get(i int) (value string, found bool) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 	if i < 0 || i >= len(s.data) {
@@ -123,7 +137,7 @@ func (s strArray) Get(i int) (value string, found bool) {
 	return s.data[i], true
 }
 
-func (s strArray) Set(i int, value string) error {
+func (s *strArray) Set(i int, value string) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	if i < 0 || i >= len(s.data) {
@@ -133,7 +147,7 @@ func (s strArray) Set(i int, value string) error {
 	return nil
 }
 
-func (s strArray) Clone() IStrArray {
+func (s *strArray) Clone() IStrArray {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 	newStrArr := make([]string, len(s.data))

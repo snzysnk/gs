@@ -26,4 +26,5 @@ func TestUnique(t *testing.T) {
 		return strings.Compare(i, k) < 0
 	})
 	fmt.Println(arrUnique.ToStrSlice())
+	fmt.Println(arr.ToStrSlice())
 }
