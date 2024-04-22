@@ -25,7 +25,7 @@ type strAnyMap struct {
 	data map[string]interface{}
 }
 
-func (s strAnyMap) Remove(k string) (value interface{}) {
+func (s *strAnyMap) Remove(k string) (value interface{}) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	var ok bool
@@ -49,7 +49,7 @@ func NewFormMap(data map[string]interface{}, safe bool) IStrAnyMap {
 	}
 }
 
-func (s strAnyMap) Foreach(f func(k interface{}, v interface{})) {
+func (s *strAnyMap) Foreach(f func(k interface{}, v interface{})) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 	for k, v := range s.data {
@@ -57,7 +57,7 @@ func (s strAnyMap) Foreach(f func(k interface{}, v interface{})) {
 	}
 }
 
-func (s strAnyMap) ToNewMap() map[string]interface{} {
+func (s *strAnyMap) ToNewMap() map[string]interface{} {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 	newMap := make(map[string]interface{}, len(s.data))
@@ -67,12 +67,12 @@ func (s strAnyMap) ToNewMap() map[string]interface{} {
 	return newMap
 }
 
-func (s strAnyMap) Clone() IStrAnyMap {
+func (s *strAnyMap) Clone() IStrAnyMap {
 	_, isSafe := s.mu.(*srwmutex.SafeRWMutex)
 	return NewFormMap(s.ToNewMap(), isSafe)
 }
 
-func (s strAnyMap) Set(k string, v interface{}) {
+func (s *strAnyMap) Set(k string, v interface{}) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	if f, ok := v.(func() interface{}); ok {
@@ -82,19 +82,19 @@ func (s strAnyMap) Set(k string, v interface{}) {
 	}
 }
 
-func (s strAnyMap) LockFunc(f func(map[string]interface{})) {
+func (s *strAnyMap) LockFunc(f func(map[string]interface{})) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	f(s.data)
 }
 
-func (s strAnyMap) RLockFunc(f func(map[string]interface{})) {
+func (s *strAnyMap) RLockFunc(f func(map[string]interface{})) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 	f(s.data)
 }
 
-func (s strAnyMap) GetOrSetWithLock(k string, v interface{}) interface{} {
+func (s *strAnyMap) GetOrSetWithLock(k string, v interface{}) interface{} {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	if value, ok := s.data[k]; ok {
@@ -108,21 +108,21 @@ func (s strAnyMap) GetOrSetWithLock(k string, v interface{}) interface{} {
 	return s.data[k]
 }
 
-func (s strAnyMap) GetOrSet(k string, v interface{}) interface{} {
+func (s *strAnyMap) GetOrSet(k string, v interface{}) interface{} {
 	if value, ok := s.Search(k); ok {
 		return value
 	}
 	return s.GetOrSetWithLock(k, v)
 }
 
-func (s strAnyMap) Search(k string) (interface{}, bool) {
+func (s *strAnyMap) Search(k string) (interface{}, bool) {
 	s.mu.RLock()
 	s.mu.RUnlock()
 	value, ok := s.data[k]
 	return value, ok
 }
 
-func (s strAnyMap) Get(k string) interface{} {
+func (s *strAnyMap) Get(k string) interface{} {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 	return s.data[k]
