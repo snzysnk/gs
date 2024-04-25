@@ -35,14 +35,14 @@ func (s *strAnyMap) Remove(k string) (value interface{}) {
 	return value
 }
 
-func New(safe bool) IStrAnyMap {
+func NewStrAnyMap(safe bool) IStrAnyMap {
 	return &strAnyMap{
 		mu:   srwmutex.New(safe),
 		data: make(map[string]interface{}),
 	}
 }
 
-func NewFormMap(data map[string]interface{}, safe bool) IStrAnyMap {
+func NewStrAnyFormMap(data map[string]interface{}, safe bool) IStrAnyMap {
 	return &strAnyMap{
 		mu:   srwmutex.New(safe),
 		data: data,
@@ -69,7 +69,7 @@ func (s *strAnyMap) ToNewMap() map[string]interface{} {
 
 func (s *strAnyMap) Clone() IStrAnyMap {
 	_, isSafe := s.mu.(*srwmutex.SafeRWMutex)
-	return NewFormMap(s.ToNewMap(), isSafe)
+	return NewStrAnyFormMap(s.ToNewMap(), isSafe)
 }
 
 func (s *strAnyMap) Set(k string, v interface{}) {
@@ -117,7 +117,7 @@ func (s *strAnyMap) GetOrSet(k string, v interface{}) interface{} {
 
 func (s *strAnyMap) Search(k string) (interface{}, bool) {
 	s.mu.RLock()
-	s.mu.RUnlock()
+	defer s.mu.RUnlock()
 	value, ok := s.data[k]
 	return value, ok
 }

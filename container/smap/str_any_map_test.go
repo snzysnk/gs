@@ -6,14 +6,14 @@ import (
 )
 
 func TestClone(t *testing.T) {
-	formMap := NewFormMap(map[string]interface{}{
+	formMap := NewStrAnyFormMap(map[string]interface{}{
 		"k1": "v1",
 	}, false)
 	formMap.Clone()
 }
 
 func TestSet(t *testing.T) {
-	anyMap := New(true)
+	anyMap := NewStrAnyMap(true)
 	anyMap.Set("name", "xie")
 	anyMap.Set("age", func() interface{} {
 		return 18
