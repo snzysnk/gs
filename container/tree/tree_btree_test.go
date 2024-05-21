@@ -1,16 +1,15 @@
 package tree
 
-import (
-	"fmt"
-	"testing"
-)
+import "testing"
 
-func TestCopy(t *testing.T) {
-	var (
-		arr      = []string{"a", "b", "c", "d", "e", "f", "g"}
-		position = 3
-	)
-
-	//copy(arr[position+1:], arr[position:])
-	fmt.Println(arr[position+1:], arr[position:])
+func TestNewBTree(t *testing.T) {
+	tree := NewBTree(3, func(v1, v2 interface{}) int {
+		v1i := v1.(int)
+		v2i := v2.(int)
+		return v1i - v2i
+	}, true)
+	tree.Set(1, 1)
+	tree.Set(2, 2)
+	tree.Set(3, 3)
+	tree.Dump()
 }
